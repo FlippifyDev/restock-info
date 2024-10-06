@@ -68,6 +68,9 @@ NORMALISE_TITLE_BLACKLISTED_WORDS = fetch_constants("normalise-title-blacklisted
 
 
 def fetch_products_info(urls):
+    if len(urls) == 0:
+        return {}
+    
     scraped_data = html_session.run(urls, {"ebay": ebay_config}, batch_size=20, batch_delay_seconds=1)
     product_info = {}
 

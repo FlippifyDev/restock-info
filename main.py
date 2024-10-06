@@ -3,7 +3,6 @@ from src.restock_playstation import playstation_run
 from src.logger_setup import setup_logger, delete_previous_logs_on_start
 
 
-
 logger = setup_logger("RESTOCK_INFO", "bot")
 
 
@@ -19,6 +18,7 @@ def main():
     try:
         for monitor in restock_monitors:
             monitor(db)
+        db.client.close()
 
     except Exception as error:
         logger.error(error)

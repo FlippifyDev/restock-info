@@ -72,17 +72,15 @@ def playstation_run(db):
         products = db.fetch_docs({"website": "Playstation Direct"}, {})
         product_dict = {prod["product_code"]: prod for prod in products}
         product_codes_url_param = ",".join(list(product_dict.keys()))
-        ebay_urls = [prod["ebay_link"] for prod in products]
-        ebay_data = fetch_products_info(ebay_urls)
-
+        ebay_urls = []
+        
         url = root_api + product_codes_url_param
         requested_products = send_request(url)["products"]
 
-        updates = []
+        updates_dict = {}
         for new_prod in requested_products:
             try:
                 old_prod = product_dict.get(new_prod["code"])
-                prod_ebay_data = ebay_data[old_prod["ebay_link"]]
 
                 old_stock = old_prod["stock_available"]
                 new_stock = new_prod["stock"]["stockLevelStatus"] == "inStock"
@@ -96,26 +94,35 @@ def playstation_run(db):
                 new_stock_level = "Low Stock" if new_prod["stock"]["isProductLowStock"] == True else "Normal"
                 change_in_stock_level = new_stock_level != old_stock_level
 
-                old_ebay_price = old_prod["ebay_mean_price"]
-                new_ebay_price = prod_ebay_data["ebay_mean_price"]
-                change_in_stock_level = new_ebay_price != old_ebay_price
 
                 if any([change_in_stock, change_in_price, change_in_stock_level]):
+                    ebay_urls.append(old_prod["ebay_link"])
                     update = {
                         "$set": {
+                            "product_code": new_prod["code"],
                             "stock_available": new_stock,
                             "price": new_price,
                             "stock_level": new_stock_level,
-                            "ebay_mean_price": new_ebay_price,
-                            "sold_last_7_days": prod_ebay_data["sold_last_7_days"],
-                            "sold_last_month": prod_ebay_data["sold_last_month"],
                             "timestamp": datetime.now(timezone.utc)
                         }
                     }
-                    updates.append(UpdateOne({"product_code": new_prod["code"]}, update))
+                    updates_dict[old_prod["ebay_link"]] = update
             
             except Exception as error:
                 logger.error(error)
+    
+        ebay_data = fetch_products_info(ebay_urls)
+
+        updates = []
+        for ebay_url, new_ebay_data in ebay_data.items():
+            # The data to be updated
+            prod_update_dict = updates_dict[ebay_url]
+
+            prod_update_dict["ebay_mean_price"] = new_ebay_data["ebay_mean_price"]
+            prod_update_dict["sold_last_7_days"] = new_ebay_data["sold_last_7_days"]
+            prod_update_dict["sold_last_month"] = new_ebay_data["sold_last_month"]
+            
+            updates.append(UpdateOne({"product_code": product_dict["product_code"]}, product_dict))
 
         # Perform the bulk update if there are any updates
         if updates:
