@@ -94,6 +94,7 @@ def playstation_run(db):
                 new_stock_level = "Low Stock" if new_prod["stock"]["isProductLowStock"] == True else "Normal"
                 change_in_stock_level = new_stock_level != old_stock_level
 
+                maxOrderQuantity = new_prod["maxOrderQuantity"]
 
                 if any([change_in_stock, change_in_price, change_in_stock_level]):
                     ebay_urls.append(old_prod["ebay_link"])
@@ -102,6 +103,7 @@ def playstation_run(db):
                         "stock_available": new_stock,
                         "price": new_price,
                         "stock_level": new_stock_level,
+                        "maxOrderQuantity": maxOrderQuantity,
                         "timestamp": datetime.now(timezone.utc)
                     }
                     updates_dict[old_prod["ebay_link"]] = update
