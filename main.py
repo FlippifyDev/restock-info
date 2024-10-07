@@ -6,7 +6,7 @@ from src.logger_setup import setup_logger, delete_previous_logs_on_start
 logger = setup_logger("RESTOCK_INFO", "bot")
 
 
-restock_monitors = [playstation_run]
+restock_monitors = {"Playstation Direct": playstation_run}
 
 
 def main():
@@ -16,8 +16,9 @@ def main():
         logger.error(error)
 
     try:
-        for monitor in restock_monitors:
-            monitor(db)
+        for monitor, func in restock_monitors.items():
+            func(db)
+            logger.info(f"Scraped {monitor}")
         db.client.close()
 
     except Exception as error:

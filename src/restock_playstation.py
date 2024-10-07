@@ -98,13 +98,11 @@ def playstation_run(db):
                 if any([change_in_stock, change_in_price, change_in_stock_level]):
                     ebay_urls.append(old_prod["ebay_link"])
                     update = {
-                        "$set": {
-                            "product_code": new_prod["code"],
-                            "stock_available": new_stock,
-                            "price": new_price,
-                            "stock_level": new_stock_level,
-                            "timestamp": datetime.now(timezone.utc)
-                        }
+                        "product_code": new_prod["code"],
+                        "stock_available": new_stock,
+                        "price": new_price,
+                        "stock_level": new_stock_level,
+                        "timestamp": datetime.now(timezone.utc)
                     }
                     updates_dict[old_prod["ebay_link"]] = update
             
@@ -122,7 +120,7 @@ def playstation_run(db):
             prod_update_dict["sold_last_7_days"] = new_ebay_data["sold_last_7_days"]
             prod_update_dict["sold_last_month"] = new_ebay_data["sold_last_month"]
             
-            updates.append(UpdateOne({"product_code": product_dict["product_code"]}, product_dict))
+            updates.append(UpdateOne({"product_code": prod_update_dict["product_code"]}, {"$set": prod_update_dict}))
 
         # Perform the bulk update if there are any updates
         if updates:
@@ -138,7 +136,8 @@ def send_request(url):
     session = tls_client.Session(
         client_identifier="firefox_104"
     )
-
+    
+    logger.info(f"Scraping ({url})")
     res = session.get(url, headers=headers())
     if res.status_code != 200:
         logger.warning(f"Recieved status code ({res.status_code})")
