@@ -67,7 +67,11 @@ def argos_run(db):
         
         for old_prod in products:
             max_order_quanitity = product_dict[old_prod["product_code"]]["attributes"]["maximumQuantity"]
-            updates_dict[old_prod["product_code"]]["maxOrderQuantity"] = max_order_quanitity
+            new_prod = updates_dict.get("product_code")
+            if new_prod is None:
+                continue
+            
+            updates_dict["product_code"]["maxOrderQuantity"] = max_order_quanitity
 
             for item in product_data["included"]:
                 if (item["id"] == old_prod["product_code"]) and (item["type"] == "prices"):
