@@ -90,7 +90,7 @@ def argos_run(db):
             logger.info(f"{result.modified_count} products updated.")
 
     except Exception as error:
-        raise error
+        logger.error(error)
 
 
 def send_request(url, custom_headers=headers()):

@@ -19,12 +19,10 @@ def main():
     try:
         for monitor, func in restock_monitors.items():
             func(db)
-            break
             logger.info(f"Scraped {monitor}")
         db.client.close()
 
     except Exception as error:
-        raise error
         logger.error(error)
     
 
